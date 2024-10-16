@@ -1,0 +1,110 @@
+
+apiVersion: scaffolder.backstage.io/v1beta3
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template
+kind: Template
+metadata:
+  name: springTemplate
+  title: Springboot template
+  description: Template per inzializzare un progetto con back-end in spring
+  tags:
+    - recommended
+    - springboot
+spec:
+  owner: user:filippocdev
+  type: component
+
+  # These parameters are used to generate the input form in the frontend, and are
+  # used to gather input data for the execution of the template.
+  parameters:
+    - title: Fill in some steps
+      required:
+        - name
+        - owner
+      properties:
+        name:
+          title: Nome applicazione
+          type: string
+          description: Nome unico per l'applicazione
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+
+        postgresql:
+          title: postgresql
+          type: boolean
+          description: Selezione per usare postgresql
+          default: false
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+
+        mongodb:
+          title: mongodb
+          type: boolean
+          description: Seleziona per usare mongodb
+          default: false
+          ui:autofocus: true
+          ui:options:
+            rows: 5    
+
+
+        owner:
+          title: Owner
+          type: string
+          description: Owner del componente, scrivere in questo formato gruppo:nomeutente
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - gitlab.com
+
+  # These steps are executed in the scaffolder backend, using data that we gathered
+  # via the parameters above.
+  steps:
+    # Each step executes an action, in this case one templates files into the working directory.
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          postgresql: ${{ parameters.posgresql }}
+          mongodb: ${{ parameters.mongodb }}
+          owner: ${{ parameters.owner }}
+
+    # This step publishes the contents of the working directory to GitHub.
+    - id: publish
+      name: Publish
+      action: publish:gitlab
+      input:
+        allowedHosts: ['gitlab.com']
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+
+    # The final step is to register our new component in the catalog.
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  # Outputs are displayed to the user after a successful execution of the template.
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
