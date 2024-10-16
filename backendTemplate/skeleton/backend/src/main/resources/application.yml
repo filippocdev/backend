@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: ${{ values.name | dump }}
+# {% if values.mongodb %}
+# Generato con mongodb
+  data:
+    mongodb:
+      spring:
+  data:
+    mongodb:
+      authentication-database: admin
+      username: #your_root_user     (default->rootuser)
+      password: #your_root_password (default->rootpass)
+      database: #your_db_name
+      port: #your_port              (default->27017)
+      host: #your_host  
+# {% endif %}
+# {% if values.postgresql %}
+# Generato con postgresql
+  datasource:
+    properties:
+      username: #your_root_user     (default->rootuser)
+      password: #your_root_password (default->rootpass)
+      database: #your_db_name
+      port: #your_port              (default->27017)
+      host: #your_host  
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    generate-ddl: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  profiles:
+    active: dev
+
+# Additional configurations
+server:
+  port: #your_server_port
+
+logging:
+  level:
+    root: INFO
+    org:
+      springframework:
+        web: DEBUG
+
+# {% endif %}
+
